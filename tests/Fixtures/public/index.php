@@ -1,0 +1,1 @@
+<?php // fixture core file

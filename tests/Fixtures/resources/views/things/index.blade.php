@@ -1,0 +1,1 @@
+<div>{{ $thing->title }}</div>

@@ -1,0 +1,55 @@
+{
+    "name": "gomdimapps/laravel-mcp-pilot",
+    "description": "Token-lean toolkit for Laravel projects, built for MCP and other low-token AI integrations: a lexical index (classes, routes, views, frontend files, with pluggable schema extraction) and a driver-agnostic database introspection tool (list tables, describe schema, run guarded queries, optional Spatie Permission mapping).",
+    "type": "library",
+    "license": "MIT",
+    "keywords": ["laravel", "vue", "typescript", "index", "search", "database", "mcp", "ai"],
+    "authors": [
+        {
+            "name": "GomdimApps",
+            "email": "isac.gondim.dev@gmail.com"
+        }
+    ],
+    "require": {
+        "php": "^8.3",
+        "laravel/framework": "^12.0|^13.0"
+    },
+    "require-dev": {
+        "orchestra/testbench": "^10.0|^11.0",
+        "pestphp/pest": "^2.0|^3.0",
+        "pestphp/pest-plugin-laravel": "^2.0|^3.0",
+        "spatie/laravel-permission": "^6.0"
+    },
+    "suggest": {
+        "spatie/laravel-permission": "Enables Spatie Permission schema introspection (roles/permissions) in DatabaseIntrospectionService::describeTable()."
+    },
+    "autoload": {
+        "psr-4": {
+            "GomdimApps\\LaravelMCPPilot\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "GomdimApps\\LaravelMCPPilot\\Tests\\": "tests/",
+            "App\\": "tests/Fixtures/app/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "GomdimApps\\LaravelMCPPilot\\LaravelMCPPilotServiceProvider"
+            ]
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true,
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        },
+        "platform": {
+            "php": "8.3.0"
+        }
+    }
+}

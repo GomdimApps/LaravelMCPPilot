@@ -1,0 +1,38 @@
+services:
+  test-8.3:
+    build:
+      context: .
+      args:
+        PHP_VERSION: "8.3"
+    volumes:
+      - .:/app
+      - vendor-8.3:/app/vendor
+      - composer-cache-8.3:/root/.composer/cache
+
+  test-8.4:
+    build:
+      context: .
+      args:
+        PHP_VERSION: "8.4"
+    volumes:
+      - .:/app
+      - vendor-8.4:/app/vendor
+      - composer-cache-8.4:/root/.composer/cache
+
+  test-8.5:
+    build:
+      context: .
+      args:
+        PHP_VERSION: "8.5"
+    volumes:
+      - .:/app
+      - vendor-8.5:/app/vendor
+      - composer-cache-8.5:/root/.composer/cache
+
+volumes:
+  vendor-8.3:
+  vendor-8.4:
+  vendor-8.5:
+  composer-cache-8.3:
+  composer-cache-8.4:
+  composer-cache-8.5:

@@ -1,0 +1,111 @@
+[
+    {
+        "kind": "class",
+        "symbol": "App\\Http\\Controllers\\ThingController",
+        "file": "app/Http/Controllers/ThingController.php",
+        "methods": [
+            "index",
+            "store"
+        ]
+    },
+    {
+        "kind": "class",
+        "symbol": "App\\Http\\Requests\\StoreThingRequest",
+        "file": "app/Http/Requests/StoreThingRequest.php",
+        "methods": [
+            "authorize",
+            "rules"
+        ],
+        "rules": {
+            "title": "['required', 'string', 'max:255']",
+            "email": "'required|email'",
+            "amount": "['nullable', 'numeric', 'min:0']",
+            "user_id": "'required|exists:users,id,deleted_at,'.null"
+        },
+        "authorize": "can('create', Thing::class)"
+    },
+    {
+        "kind": "class",
+        "symbol": "App\\Models\\Thing",
+        "file": "app/Models/Thing.php",
+        "methods": [
+            "getDisplayTitleAttribute"
+        ],
+        "fillable": [
+            "title",
+            "email",
+            "amount",
+            "user_id"
+        ]
+    },
+    {
+        "kind": "vue",
+        "symbol": "ThingForm",
+        "file": "resources/js/components/ThingForm.vue",
+        "props": [
+            "title",
+            "amount"
+        ],
+        "emits": [
+            "saved"
+        ],
+        "form_fields": [
+            "title",
+            "amount"
+        ]
+    },
+    {
+        "kind": "ts",
+        "symbol": "thing",
+        "file": "resources/js/types/thing.ts",
+        "exports": [
+            "Thing",
+            "ThingStatus"
+        ],
+        "interface_fields": [
+            "id",
+            "title",
+            "amount"
+        ]
+    },
+    {
+        "kind": "view",
+        "symbol": "index",
+        "file": "resources/views/things/index.blade.php"
+    },
+    {
+        "kind": "lang",
+        "symbol": "thing",
+        "file": "lang/en/thing.php"
+    },
+    {
+        "kind": "migration",
+        "symbol": "2024_01_01_000000_create_things_table",
+        "file": "database/migrations/2024_01_01_000000_create_things_table.php"
+    },
+    {
+        "kind": "factory",
+        "symbol": "ThingFactory",
+        "file": "database/factories/ThingFactory.php"
+    },
+    {
+        "kind": "seeder",
+        "symbol": "ThingSeeder",
+        "file": "database/seeders/ThingSeeder.php"
+    },
+    {
+        "kind": "doc",
+        "symbol": "thing",
+        "file": "docs/thing.md"
+    },
+    {
+        "kind": "core",
+        "symbol": "app",
+        "file": "bootstrap/app.php"
+    },
+    {
+        "kind": "core",
+        "symbol": "index",
+        "file": "public/index.php"
+    }
+]
