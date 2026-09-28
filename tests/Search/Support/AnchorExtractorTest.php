@@ -41,3 +41,10 @@ it('extracts plain quoted string items from a list body', function () {
 
     expect($this->anchor->quotedItems($body))->toBe(['title', 'email', 'amount']);
 });
+
+it('splits an argument list on top-level commas only', function () {
+    expect($this->anchor->topLevelSegments("User::class, 'author_id'"))
+        ->toBe(['User::class', "'author_id'"])
+        ->and($this->anchor->topLevelSegments("Thing::class, ['a', 'b'], fn (\$x) => \$x"))
+        ->toBe(['Thing::class', "['a', 'b']", 'fn ($x) => $x']);
+});

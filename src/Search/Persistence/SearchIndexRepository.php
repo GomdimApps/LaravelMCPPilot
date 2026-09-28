@@ -3,6 +3,7 @@
 namespace GomdimApps\LaravelMCPPilot\Search\Persistence;
 
 use GomdimApps\LaravelMCPPilot\Search\Persistence\Models\Entry;
+use GomdimApps\LaravelMCPPilot\Search\Persistence\Models\Relation;
 use GomdimApps\LaravelMCPPilot\Search\Persistence\Models\SearchMeta;
 use GomdimApps\LaravelMCPPilot\Search\Persistence\Models\Term;
 use Illuminate\Database\Schema\Blueprint;
@@ -26,8 +27,10 @@ class SearchIndexRepository
         $this->ensureSchema();
 
         DB::connection(SearchConnection::NAME)->transaction(function () use ($index) {
+            // Relations/terms first: both hold a foreign key onto entries.
+            Relation::query()->delete();
             Term::query()->delete();
-            Entry::query()->delete(); // terms first: they hold a foreign key onto entries
+            Entry::query()->delete();
 
             collect($index['entries'])->values()
                 ->map(fn (array $entry, int $id) => [
@@ -47,6 +50,16 @@ class SearchIndexRepository
                 ]))
                 ->chunk(1000)
                 ->each(fn (Collection $chunk) => Term::insert($chunk->all()));
+
+            collect($index['relations'] ?? [])
+                ->map(fn (array $relation) => [
+                    'from_entry_id' => $relation['from'],
+                    'to_entry_id' => $relation['to'],
+                    'to_symbol' => $relation['to_symbol'],
+                    'type' => $relation['type'],
+                ])
+                ->chunk(500)
+                ->each(fn (Collection $chunk) => Relation::insert($chunk->all()));
 
             SearchMeta::query()->updateOrCreate(['id' => 1], ['generated_at' => $index['generated_at']]);
         });
@@ -76,6 +89,47 @@ class SearchIndexRepository
         $this->ensureSchema();
 
         return Entry::query()->doesntExist();
+    }
+
+    /**
+     * One-hop graph lookup: the entry itself plus everything it points to and everything that
+     * points to it. $kind disambiguates when the symbol alone isn't unique (e.g. two 'index' views).
+     */
+    public function relationsForSymbol(string $symbol, ?string $kind = null): array
+    {
+        $this->ensureSchema();
+
+        $entry = Entry::query()->where('symbol', $symbol)
+            ->when($kind, fn ($query) => $query->where('kind', $kind))
+            ->first();
+
+        if (! $entry) {
+            return ['entry' => null, 'outgoing' => [], 'incoming' => []];
+        }
+
+        return ['entry' => $entry->payload, ...$this->relationsFor($entry->id)];
+    }
+
+    /** @return array{outgoing: array, incoming: array} */
+    private function relationsFor(int $entryId): array
+    {
+        $outgoing = Relation::query()->where('from_entry_id', $entryId)->get();
+        $incoming = Relation::query()->where('to_entry_id', $entryId)->get();
+
+        $connectedIds = $outgoing->pluck('to_entry_id')->merge($incoming->pluck('from_entry_id'))->filter()->unique();
+        $payloads = Entry::query()->whereIn('id', $connectedIds)->get()->keyBy('id')->map(fn (Entry $entry) => $entry->payload);
+
+        return [
+            'outgoing' => $outgoing->map(fn (Relation $relation) => [
+                'type' => $relation->type,
+                'target' => $relation->to_symbol,
+                'entry' => $relation->to_entry_id ? ($payloads[$relation->to_entry_id] ?? null) : null,
+            ])->values()->all(),
+            'incoming' => $incoming->map(fn (Relation $relation) => [
+                'type' => $relation->type,
+                'entry' => $payloads[$relation->from_entry_id] ?? null,
+            ])->values()->all(),
+        ];
     }
 
     /**
@@ -118,16 +172,24 @@ class SearchIndexRepository
             touch($path);
         }
 
-        if (! Schema::connection(SearchConnection::NAME)->hasTable('search_entries')) {
-            $this->createTables();
+        $schema = Schema::connection(SearchConnection::NAME);
+
+        if (! $schema->hasTable('search_entries')) {
+            $this->createCoreTables($schema);
+        }
+
+        // Guarded independently of the check above: a .db file created before this table existed
+        // already has search_entries, so it would never reach createCoreTables() otherwise.
+        if (! $schema->hasTable('search_relations')) {
+            $this->createRelationsTable($schema);
         }
 
         $this->ready = true;
     }
 
-    private function createTables(): void
+    private function createCoreTables($schema): void
     {
-        Schema::connection(SearchConnection::NAME)->create('search_entries', function (Blueprint $table) {
+        $schema->create('search_entries', function (Blueprint $table) {
             $table->unsignedInteger('id')->primary();
             $table->string('kind')->index();
             $table->string('symbol')->nullable();
@@ -135,18 +197,36 @@ class SearchIndexRepository
             $table->json('payload');
         });
 
-        Schema::connection(SearchConnection::NAME)->create('search_terms', function (Blueprint $table) {
+        $schema->create('search_terms', function (Blueprint $table) {
             $table->string('term');
             $table->unsignedInteger('entry_id');
             $table->primary(['term', 'entry_id']);
             $table->foreign('entry_id')->references('id')->on('search_entries')->cascadeOnDelete();
         });
 
-        Schema::connection(SearchConnection::NAME)->create('search_meta', function (Blueprint $table) {
+        $schema->create('search_meta', function (Blueprint $table) {
             $table->unsignedTinyInteger('id')->primary(); // single row, id = 1
             $table->string('generated_at');
         });
 
         DB::connection(SearchConnection::NAME)->statement('PRAGMA journal_mode=WAL');
+    }
+
+    private function createRelationsTable($schema): void
+    {
+        $schema->create('search_relations', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedInteger('from_entry_id');
+            $table->unsignedInteger('to_entry_id')->nullable(); // null = target symbol didn't resolve
+            $table->string('to_symbol'); // always populated, even when unresolved
+            $table->string('type');
+
+            $table->foreign('from_entry_id')->references('id')->on('search_entries')->cascadeOnDelete();
+            $table->foreign('to_entry_id')->references('id')->on('search_entries')->cascadeOnDelete();
+
+            $table->index('from_entry_id'); // "what does this entry point to"
+            $table->index('to_entry_id'); // "what points to this entry" (reverse traversal)
+            $table->index('type');
+        });
     }
 }

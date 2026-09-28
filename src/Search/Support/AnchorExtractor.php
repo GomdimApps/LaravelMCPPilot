@@ -40,4 +40,38 @@ class AnchorExtractor
 
         return array_values(array_unique($matches[1]));
     }
+
+    /**
+     * Splits an argument-list body on top-level commas only — one nested inside (), [], {}, or a
+     * quoted string doesn't count. Used to pull the first argument out of a call like
+     * `belongsTo(User::class, 'author_id')` without a comma inside a later argument breaking it.
+     */
+    public function topLevelSegments(string $body): array
+    {
+        $segments = [];
+        $segment = '';
+        $depth = 0;
+        $quote = null;
+
+        foreach (str_split($body) as $char) {
+            $segment .= $char;
+
+            if ($quote !== null) {
+                $quote = $char === $quote ? null : $quote;
+            } elseif ($char === '\'' || $char === '"') {
+                $quote = $char;
+            } elseif (str_contains('([{', $char)) {
+                $depth++;
+            } elseif (str_contains(')]}', $char)) {
+                $depth--;
+            } elseif ($char === ',' && $depth === 0) {
+                $segments[] = trim(substr($segment, 0, -1));
+                $segment = '';
+            }
+        }
+
+        $segments[] = trim($segment);
+
+        return array_values(array_filter($segments, fn (string $segment) => $segment !== ''));
+    }
 }

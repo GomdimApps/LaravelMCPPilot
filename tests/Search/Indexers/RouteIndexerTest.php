@@ -19,5 +19,6 @@ it('indexes only named routes, with method/uri and a namespace-trimmed controlle
         ->and($entries['things.index']['kind'])->toBe('route')
         ->and($entries['things.index']['route'])->toBe('GET /things')
         ->and($entries['things.index']['action'])->toBe('ThingController@index')
+        ->and($entries['things.index']['relations'])->toContain(['type' => 'routes_to', 'target' => ThingController::class])
         ->and($entries['things.store']['route'])->toBe('POST /things');
 });

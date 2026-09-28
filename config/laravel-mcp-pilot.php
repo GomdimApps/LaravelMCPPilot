@@ -31,8 +31,17 @@ return [
         ],
 
         'controllers_namespace' => 'App\\Http\\Controllers\\',
+        'middleware_namespace' => '\\Http\\Middleware\\',
+        'policy_namespace' => '\\Policies\\',
+        'event_namespace' => '\\Events\\',
+        'listener_namespace' => '\\Listeners\\',
+        'service_namespace' => '\\Services\\',
 
-        'frontend_root' => resource_path('js'),
+        // The whole project, not just resources/js — frontend code isn't guaranteed to live
+        // under resources/js (a separate frontend/ dir, a monorepo layout, ...). excluded_paths
+        // already keeps node_modules/vendor/build output out; narrow this back down for a very
+        // large repo if a project-wide scan is more than you need.
+        'frontend_root' => base_path(),
 
         'core_paths' => [
             base_path('bootstrap'),

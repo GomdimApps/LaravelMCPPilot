@@ -2,6 +2,7 @@
 
 namespace GomdimApps\LaravelMCPPilot\Tests;
 
+use App\Providers\ThingServiceProvider;
 use GomdimApps\LaravelMCPPilot\LaravelMCPPilotServiceProvider;
 use Orchestra\Testbench\TestCase as Orchestra;
 use Spatie\Permission\PermissionServiceProvider;
@@ -13,6 +14,7 @@ abstract class TestCase extends Orchestra
         return [
             LaravelMCPPilotServiceProvider::class,
             PermissionServiceProvider::class,
+            ThingServiceProvider::class,
         ];
     }
 

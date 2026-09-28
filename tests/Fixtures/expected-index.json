@@ -1,11 +1,129 @@
 [
     {
-        "kind": "class",
+        "kind": "trait",
+        "symbol": "App\\Concerns\\HasDisplayName",
+        "file": "app/Concerns/HasDisplayName.php",
+        "methods": [
+            "displayName"
+        ],
+        "signatures": [
+            {
+                "name": "displayName",
+                "params": [],
+                "returns": "string"
+            }
+        ]
+    },
+    {
+        "kind": "command",
+        "signature": "thing:summary",
+        "symbol": "App\\Console\\Commands\\ThingSummaryCommand",
+        "file": "app/Console/Commands/ThingSummaryCommand.php",
+        "methods": [
+            "handle"
+        ],
+        "signatures": [
+            {
+                "name": "handle",
+                "params": [],
+                "returns": "void"
+            }
+        ],
+        "extends": "Illuminate\\Console\\Command",
+        "implements": [
+            "Symfony\\Component\\Console\\Command\\SignalableCommandInterface"
+        ]
+    },
+    {
+        "kind": "interface",
+        "symbol": "App\\Contracts\\Exportable",
+        "file": "app/Contracts/Exportable.php",
+        "methods": [
+            "toExportArray"
+        ],
+        "signatures": [
+            {
+                "name": "toExportArray",
+                "params": [],
+                "returns": "array"
+            }
+        ]
+    },
+    {
+        "kind": "enum",
+        "symbol": "App\\Enums\\ThingStatus",
+        "file": "app/Enums/ThingStatus.php",
+        "implements": [
+            "UnitEnum",
+            "BackedEnum"
+        ]
+    },
+    {
+        "kind": "event",
+        "symbol": "App\\Events\\ThingCreated",
+        "file": "app/Events/ThingCreated.php",
+        "methods": [
+            "__construct"
+        ],
+        "signatures": [
+            {
+                "name": "__construct",
+                "params": [
+                    {
+                        "name": "thing",
+                        "type": "App\\Models\\Thing"
+                    }
+                ],
+                "returns": null
+            }
+        ]
+    },
+    {
+        "kind": "controller",
         "symbol": "App\\Http\\Controllers\\ThingController",
         "file": "app/Http/Controllers/ThingController.php",
         "methods": [
             "index",
             "store"
+        ],
+        "signatures": [
+            {
+                "name": "index",
+                "params": [],
+                "returns": null
+            },
+            {
+                "name": "store",
+                "params": [],
+                "returns": null
+            }
+        ]
+    },
+    {
+        "kind": "middleware",
+        "aliases": [
+            "thing.active"
+        ],
+        "symbol": "App\\Http\\Middleware\\EnsureThingIsActive",
+        "file": "app/Http/Middleware/EnsureThingIsActive.php",
+        "methods": [
+            "handle"
+        ],
+        "signatures": [
+            {
+                "name": "handle",
+                "params": [
+                    {
+                        "name": "request",
+                        "type": "Illuminate\\Http\\Request"
+                    },
+                    {
+                        "name": "next",
+                        "type": "Closure"
+                    }
+                ],
+                "returns": null
+            }
         ]
     },
     {
@@ -16,6 +134,25 @@
             "authorize",
             "rules"
         ],
+        "signatures": [
+            {
+                "name": "authorize",
+                "params": [],
+                "returns": "bool"
+            },
+            {
+                "name": "rules",
+                "params": [],
+                "returns": "array"
+            }
+        ],
+        "extends": "Illuminate\\Foundation\\Http\\FormRequest",
+        "implements": [
+            "Illuminate\\Contracts\\Validation\\ValidatesWhenResolved",
+            "ArrayAccess",
+            "Illuminate\\Contracts\\Support\\Arrayable",
+            "Stringable"
+        ],
         "rules": {
             "title": "['required', 'string', 'max:255']",
             "email": "'required|email'",
@@ -25,17 +162,235 @@
         "authorize": "can('create', Thing::class)"
     },
     {
-        "kind": "class",
+        "kind": "job",
+        "symbol": "App\\Jobs\\ProcessThing",
+        "file": "app/Jobs/ProcessThing.php",
+        "methods": [
+            "handle"
+        ],
+        "signatures": [
+            {
+                "name": "handle",
+                "params": [],
+                "returns": "void"
+            }
+        ],
+        "implements": [
+            "Illuminate\\Contracts\\Queue\\ShouldQueue"
+        ]
+    },
+    {
+        "kind": "listener",
+        "listens_to": [
+            "App\\Events\\ThingCreated"
+        ],
+        "symbol": "App\\Listeners\\NotifyThingCreated",
+        "file": "app/Listeners/NotifyThingCreated.php",
+        "methods": [
+            "handle"
+        ],
+        "signatures": [
+            {
+                "name": "handle",
+                "params": [
+                    {
+                        "name": "event",
+                        "type": "App\\Events\\ThingCreated"
+                    }
+                ],
+                "returns": "void"
+            }
+        ],
+        "relations": [
+            {
+                "type": "listens_to",
+                "target": "App\\Events\\ThingCreated"
+            }
+        ]
+    },
+    {
+        "kind": "model",
         "symbol": "App\\Models\\Thing",
         "file": "app/Models/Thing.php",
         "methods": [
-            "getDisplayTitleAttribute"
+            "getDisplayTitleAttribute",
+            "user"
+        ],
+        "signatures": [
+            {
+                "name": "getDisplayTitleAttribute",
+                "params": [],
+                "returns": "string"
+            },
+            {
+                "name": "user",
+                "params": [],
+                "returns": "Illuminate\\Database\\Eloquent\\Relations\\BelongsTo"
+            }
+        ],
+        "extends": "Illuminate\\Database\\Eloquent\\Model",
+        "implements": [
+            "Illuminate\\Contracts\\Routing\\UrlRoutable",
+            "Stringable",
+            "Illuminate\\Contracts\\Queue\\QueueableEntity",
+            "JsonSerializable",
+            "Illuminate\\Contracts\\Support\\Jsonable",
+            "Illuminate\\Contracts\\Broadcasting\\HasBroadcastChannel",
+            "Illuminate\\Contracts\\Support\\CanBeEscapedWhenCastToString",
+            "ArrayAccess",
+            "Illuminate\\Contracts\\Support\\Arrayable"
         ],
         "fillable": [
             "title",
             "email",
             "amount",
             "user_id"
+        ],
+        "relationships": [
+            {
+                "type": "belongsTo",
+                "method": "user",
+                "target": "App\\Models\\User"
+            }
+        ],
+        "relations": [
+            {
+                "type": "belongsTo",
+                "target": "App\\Models\\User"
+            },
+            {
+                "type": "references_table",
+                "target": "things"
+            }
+        ]
+    },
+    {
+        "kind": "model",
+        "symbol": "App\\Models\\User",
+        "file": "app/Models/User.php",
+        "extends": "Illuminate\\Database\\Eloquent\\Model",
+        "implements": [
+            "Illuminate\\Contracts\\Routing\\UrlRoutable",
+            "Stringable",
+            "Illuminate\\Contracts\\Queue\\QueueableEntity",
+            "JsonSerializable",
+            "Illuminate\\Contracts\\Support\\Jsonable",
+            "Illuminate\\Contracts\\Broadcasting\\HasBroadcastChannel",
+            "Illuminate\\Contracts\\Support\\CanBeEscapedWhenCastToString",
+            "ArrayAccess",
+            "Illuminate\\Contracts\\Support\\Arrayable"
+        ],
+        "fillable": [
+            "name",
+            "email"
+        ],
+        "relations": [
+            {
+                "type": "references_table",
+                "target": "users"
+            }
+        ]
+    },
+    {
+        "kind": "policy",
+        "policy_for": [
+            "App\\Models\\Thing"
+        ],
+        "symbol": "App\\Policies\\ThingPolicy",
+        "file": "app/Policies/ThingPolicy.php",
+        "methods": [
+            "create",
+            "update"
+        ],
+        "signatures": [
+            {
+                "name": "create",
+                "params": [
+                    {
+                        "name": "user",
+                        "type": "App\\Models\\User"
+                    }
+                ],
+                "returns": "bool"
+            },
+            {
+                "name": "update",
+                "params": [
+                    {
+                        "name": "user",
+                        "type": "App\\Models\\User"
+                    },
+                    {
+                        "name": "thing",
+                        "type": "App\\Models\\Thing"
+                    }
+                ],
+                "returns": "bool"
+            }
+        ],
+        "relations": [
+            {
+                "type": "policy_for",
+                "target": "App\\Models\\Thing"
+            }
+        ]
+    },
+    {
+        "kind": "provider",
+        "registered": true,
+        "symbol": "App\\Providers\\ThingServiceProvider",
+        "file": "app/Providers/ThingServiceProvider.php",
+        "methods": [
+            "boot"
+        ],
+        "signatures": [
+            {
+                "name": "boot",
+                "params": [],
+                "returns": "void"
+            }
+        ],
+        "extends": "Illuminate\\Support\\ServiceProvider"
+    },
+    {
+        "kind": "service",
+        "symbol": "App\\Services\\ThingExportService",
+        "file": "app/Services/ThingExportService.php",
+        "methods": [
+            "toExportArray",
+            "export"
+        ],
+        "signatures": [
+            {
+                "name": "toExportArray",
+                "params": [],
+                "returns": "array"
+            },
+            {
+                "name": "export",
+                "params": [
+                    {
+                        "name": "thing",
+                        "type": "App\\Models\\Thing"
+                    }
+                ],
+                "returns": "array"
+            }
+        ],
+        "implements": [
+            "App\\Contracts\\Exportable"
+        ]
+    },
+    {
+        "kind": "tsx",
+        "symbol": "Extra",
+        "file": "resources/js/components/Extra.tsx",
+        "exports": [
+            "ExtraProps",
+            "Extra"
+        ],
+        "interface_fields": [
+            "label"
         ]
     },
     {
@@ -71,7 +426,31 @@
     {
         "kind": "view",
         "symbol": "index",
-        "file": "resources/views/things/index.blade.php"
+        "file": "resources/views/things/index.blade.php",
+        "extends": "layouts.app",
+        "includes": [
+            "things.partials.row"
+        ],
+        "components": [
+            "components.alert"
+        ],
+        "sections": [
+            "title"
+        ],
+        "relations": [
+            {
+                "type": "extends_view",
+                "target": "layouts.app"
+            },
+            {
+                "type": "includes_view",
+                "target": "things.partials.row"
+            },
+            {
+                "type": "includes_view",
+                "target": "components.alert"
+            }
+        ]
     },
     {
         "kind": "lang",
@@ -79,19 +458,85 @@
         "file": "lang/en/thing.php"
     },
     {
+        "kind": "config",
+        "symbol": "thing",
+        "file": "config/thing.php",
+        "keys": [
+            "default_status",
+            "statuses.0",
+            "statuses.1",
+            "notifications.enabled",
+            "notifications.channels.0",
+            "notifications.channels.1"
+        ]
+    },
+    {
         "kind": "migration",
         "symbol": "2024_01_01_000000_create_things_table",
-        "file": "database/migrations/2024_01_01_000000_create_things_table.php"
+        "file": "database/migrations/2024_01_01_000000_create_things_table.php",
+        "table": "things",
+        "columns": [
+            {
+                "name": "id",
+                "type": "id"
+            },
+            {
+                "name": "title",
+                "type": "string"
+            },
+            {
+                "name": "email",
+                "type": "text"
+            },
+            {
+                "name": "user_id",
+                "type": "foreignId",
+                "foreign": "users"
+            },
+            {
+                "name": "status",
+                "type": "enum"
+            },
+            {
+                "name": "timestamps",
+                "type": "timestamps"
+            }
+        ],
+        "aliases": [
+            "things"
+        ],
+        "relations": [
+            {
+                "type": "creates_table",
+                "target": "things"
+            }
+        ]
     },
     {
         "kind": "factory",
         "symbol": "ThingFactory",
-        "file": "database/factories/ThingFactory.php"
+        "file": "database/factories/ThingFactory.php",
+        "model": "App\\Models\\Thing",
+        "relations": [
+            {
+                "type": "uses",
+                "target": "App\\Models\\Thing"
+            }
+        ]
     },
     {
         "kind": "seeder",
         "symbol": "ThingSeeder",
-        "file": "database/seeders/ThingSeeder.php"
+        "file": "database/seeders/ThingSeeder.php",
+        "models": [
+            "App\\Models\\Thing"
+        ],
+        "relations": [
+            {
+                "type": "seeds",
+                "target": "App\\Models\\Thing"
+            }
+        ]
     },
     {
         "kind": "doc",

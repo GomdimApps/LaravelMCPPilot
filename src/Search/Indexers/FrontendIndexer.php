@@ -22,7 +22,7 @@ class FrontendIndexer implements Indexer
     public function entries(): Collection
     {
         return $this->scanner->filesUnder($this->root)
-            ->filter(fn (SplFileInfo $file) => in_array($file->getExtension(), ['vue', 'ts'], true))
+            ->filter(fn (SplFileInfo $file) => in_array($file->getExtension(), ['vue', 'ts', 'tsx', 'jsx'], true))
             ->map(fn (SplFileInfo $file) => $this->entry($file))
             ->values();
     }
@@ -36,7 +36,7 @@ class FrontendIndexer implements Indexer
             'kind' => $file->getExtension(),
             'symbol' => $file->getFilenameWithoutExtension(),
             'file' => $this->scanner->relativePath($file),
-            'exports' => $file->getExtension() === 'ts' ? $this->tsExports($source) : [],
+            'exports' => in_array($file->getExtension(), ['ts', 'tsx'], true) ? $this->tsExports($source) : [],
             ...($extractor?->extract($source) ?? []),
         ], fn ($value) => $value !== [] && $value !== null);
     }

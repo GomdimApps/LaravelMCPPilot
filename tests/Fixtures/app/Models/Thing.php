@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Thing extends Model
 {
@@ -20,5 +21,10 @@ class Thing extends Model
     public function getDisplayTitleAttribute(): string
     {
         return $this->title;
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
     }
 }

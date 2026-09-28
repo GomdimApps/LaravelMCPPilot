@@ -12,7 +12,7 @@ class TypeScriptSchema implements FrontendSchemaExtractor
 
     public function supports(SplFileInfo $file): bool
     {
-        return $file->getExtension() === 'ts';
+        return in_array($file->getExtension(), ['ts', 'tsx'], true);
     }
 
     public function extract(string $source): array

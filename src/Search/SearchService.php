@@ -51,6 +51,16 @@ class SearchService
         ];
     }
 
+    /** One-hop graph lookup: what a symbol points to, and what points to it. */
+    public function related(string $symbol, ?string $kind = null): array
+    {
+        if ($this->repository->isEmpty()) {
+            $this->refresh();
+        }
+
+        return $this->repository->relationsForSymbol($symbol, $kind);
+    }
+
     public function build(): array
     {
         $entries = $this->indexers->flatMap(fn (Indexer $indexer) => $indexer->entries())->values();
@@ -69,6 +79,50 @@ class SearchService
             'generated_at' => now()->toIso8601String(),
             'entries' => $entries->all(),
             'terms' => $terms,
+            'relations' => $this->resolveRelations($entries),
         ];
+    }
+
+    /**
+     * Resolves each entry's declared `relations` (see Indexer contract) against every other
+     * entry's `symbol`/`aliases` — same one-pass-over-the-flattened-collection trick `terms`
+     * already uses, so no indexer needs to know about another indexer's output. A target matching
+     * more than one identifier is left unresolved rather than guessed; a target matching none is
+     * still recorded (to stays null) so a consumer can see "references X, not indexed" instead of
+     * the edge silently disappearing.
+     *
+     * @param  Collection<int, array<string, mixed>>  $entries
+     * @return list<array{from: int, to: ?int, to_symbol: string, type: string}>
+     */
+    private function resolveRelations(Collection $entries): array
+    {
+        $identifiers = [];
+
+        foreach ($entries as $id => $entry) {
+            foreach (array_filter([$entry['symbol'] ?? null, ...($entry['aliases'] ?? [])]) as $identifier) {
+                $identifiers[$identifier][] = $id;
+            }
+        }
+
+        $relations = [];
+
+        foreach ($entries as $id => $entry) {
+            foreach ($entry['relations'] ?? [] as $relation) {
+                if (empty($relation['type']) || empty($relation['target'])) {
+                    continue;
+                }
+
+                $matches = $identifiers[$relation['target']] ?? [];
+
+                $relations[] = [
+                    'from' => $id,
+                    'to' => count($matches) === 1 ? $matches[0] : null,
+                    'to_symbol' => $relation['target'],
+                    'type' => $relation['type'],
+                ];
+            }
+        }
+
+        return $relations;
     }
 }

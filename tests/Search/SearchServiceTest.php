@@ -20,8 +20,12 @@ it('builds an index with entries from every registered indexer', function () {
 
     $kinds = collect($index['entries'])->pluck('kind')->unique()->values()->all();
 
-    expect($index)->toHaveKeys(['generated_at', 'entries', 'terms'])
-        ->and($kinds)->toContain('class', 'route', 'vue', 'ts', 'view', 'lang', 'migration', 'factory', 'seeder', 'doc', 'core');
+    expect($index)->toHaveKeys(['generated_at', 'entries', 'terms', 'relations'])
+        ->and($kinds)->toContain(
+            'class', 'model', 'controller', 'interface', 'trait', 'enum', 'middleware',
+            'provider', 'job', 'policy', 'listener', 'command', 'service',
+            'route', 'vue', 'ts', 'tsx', 'view', 'lang', 'config', 'migration', 'factory', 'seeder', 'doc', 'core',
+        );
 });
 
 it('produces a stable set of entries across consecutive builds, aside from the timestamp', function () {
@@ -86,8 +90,38 @@ it('creates a self-contained .db file with only its own tables, no Laravel migra
     $tables = collect(Schema::connection('laravel-mcp-pilot')->getTables())->pluck('name');
 
     expect(File::exists($path))->toBeTrue()
-        ->and($tables->all())->toEqualCanonicalizing(['search_entries', 'search_terms', 'search_meta'])
+        ->and($tables->all())->toEqualCanonicalizing(['search_entries', 'search_terms', 'search_meta', 'search_relations'])
         ->and($tables)->not->toContain('migrations');
 
     @unlink($path);
+});
+
+it('resolves a relation edge to the entry it points at, and reports the reverse edge too', function () {
+    $this->service->refresh();
+
+    $thing = $this->service->related('App\\Models\\Thing', 'model');
+    $referencesTable = collect($thing['outgoing'])->firstWhere('type', 'references_table');
+
+    expect($thing['entry']['symbol'])->toBe('App\\Models\\Thing')
+        ->and(collect($thing['outgoing'])->pluck('type'))->toContain('belongsTo')
+        ->and($referencesTable['entry']['kind'])->toBe('migration');
+});
+
+it('keeps a relation whose target does not resolve to any indexed entry, instead of dropping it', function () {
+    $this->service->refresh();
+
+    $view = $this->service->related('index', 'view');
+    $extends = collect($view['outgoing'])->firstWhere('type', 'extends_view');
+
+    expect($extends['target'])->toBe('layouts.app')
+        ->and($extends['entry'])->toBeNull();
+});
+
+it('turns a listener kind detector\'s listens_to context into a resolvable relation edge', function () {
+    $this->service->refresh();
+
+    $listener = $this->service->related('App\\Listeners\\NotifyThingCreated', 'listener');
+    $listensTo = collect($listener['outgoing'])->firstWhere('type', 'listens_to');
+
+    expect($listensTo['entry']['symbol'])->toBe('App\\Events\\ThingCreated');
 });

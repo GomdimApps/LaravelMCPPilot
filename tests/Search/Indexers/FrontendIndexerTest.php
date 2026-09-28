@@ -34,3 +34,24 @@ it('collects top-level TS exports separately from interface fields', function ()
 
     expect($entry['exports'])->toContain('Thing', 'ThingStatus');
 });
+
+it('extracts interface fields from a .tsx file the same as .ts', function () {
+    $entry = $this->indexer->entries()->firstWhere('symbol', 'Extra');
+
+    expect($entry['kind'])->toBe('tsx')
+        ->and($entry['interface_fields'])->toBe(['label']);
+});
+
+it('scans the whole given root, not just a resources/js-style subtree', function () {
+    $anchor = new AnchorExtractor;
+    $indexer = new FrontendIndexer(
+        new FileScanner([]),
+        collect([new VueComponentSchema($anchor), new TypeScriptSchema($anchor)]),
+        __DIR__.'/../../Fixtures',
+    );
+
+    $entries = $indexer->entries()->keyBy('symbol');
+
+    expect($entries->has('ThingForm'))->toBeTrue() // under resources/js
+        ->and($entries->has('Extra'))->toBeTrue(); // under a sibling frontend/ dir
+});
