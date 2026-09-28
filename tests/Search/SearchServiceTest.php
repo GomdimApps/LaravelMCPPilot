@@ -1,9 +1,11 @@
 <?php
 
 use App\Http\Controllers\ThingController;
+use GomdimApps\LaravelMCPPilot\Search\Persistence\Models\Entry;
 use GomdimApps\LaravelMCPPilot\Search\SearchService;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
 beforeEach(function () {
@@ -51,11 +53,11 @@ it('matches the frozen baseline index captured for the fixture app', function ()
     expect($entries)->toEqual($expected);
 });
 
-it('persists the built index to the configured cache path on refresh', function () {
+it('persists the built index into the search database on refresh', function () {
     $summary = $this->service->refresh();
 
     expect($summary)->toHaveKeys(['entries', 'terms'])
-        ->and(File::exists(config('laravel-mcp-pilot.search.cache_path')))->toBeTrue();
+        ->and(Entry::query()->count())->toBe($summary['entries']);
 });
 
 it('searches the cached index by term, ranking symbol matches first', function () {
@@ -71,4 +73,21 @@ it('returns no matches for a term with no postings', function () {
     $this->service->refresh();
 
     expect($this->service->search('nonexistentzzz')['total_matches'])->toBe(0);
+});
+
+it('creates a self-contained .db file with only its own tables, no Laravel migrations bookkeeping', function () {
+    $path = sys_get_temp_dir().'/laravel-mcp-pilot-file-test.db';
+    @unlink($path);
+
+    config(['laravel-mcp-pilot.search.database_path' => $path]);
+
+    $this->app->make(SearchService::class)->refresh();
+
+    $tables = collect(Schema::connection('laravel-mcp-pilot')->getTables())->pluck('name');
+
+    expect(File::exists($path))->toBeTrue()
+        ->and($tables->all())->toEqualCanonicalizing(['search_entries', 'search_terms', 'search_meta'])
+        ->and($tables)->not->toContain('migrations');
+
+    @unlink($path);
 });

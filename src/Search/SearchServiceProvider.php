@@ -8,6 +8,7 @@ use GomdimApps\LaravelMCPPilot\Search\Indexers\FrontendIndexer;
 use GomdimApps\LaravelMCPPilot\Search\Indexers\PhpClassIndexer;
 use GomdimApps\LaravelMCPPilot\Search\Indexers\RouteIndexer;
 use GomdimApps\LaravelMCPPilot\Search\Indexers\SupportFileIndexer;
+use GomdimApps\LaravelMCPPilot\Search\Persistence\SearchIndexRepository;
 use GomdimApps\LaravelMCPPilot\Search\Schema\FormRequestSchema;
 use GomdimApps\LaravelMCPPilot\Search\Schema\ModelSchema;
 use GomdimApps\LaravelMCPPilot\Search\Schema\TypeScriptSchema;
@@ -19,6 +20,8 @@ class SearchServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
+        $this->app->singleton(SearchIndexRepository::class);
+
         $this->app->singleton(FileScanner::class, fn () => new FileScanner(config('laravel-mcp-pilot.search.excluded_paths')));
 
         // Extension point 1: add your own PhpSchemaExtractor/FrontendSchemaExtractor from your
@@ -65,6 +68,7 @@ class SearchServiceProvider extends ServiceProvider
         $this->app->singleton(SearchService::class, fn ($app) => new SearchService(
             collect($app->tagged('laravel-mcp-pilot.indexers')),
             $app->make(Tokenizer::class),
+            $app->make(SearchIndexRepository::class),
         ));
     }
 }

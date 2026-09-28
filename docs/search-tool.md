@@ -43,7 +43,7 @@ Published under the `search` key of `config/laravel-mcp-pilot.php`:
 
 | Key | Purpose |
 |---|---|
-| `cache_path` | Where the built index is persisted (`refresh()`/`loadedIndex()`) |
+| `database_path` | Where the built index's SQLite `.db` file is persisted (`refresh()`/`search()`) |
 | `max_results` | Default result cap for `search()` |
 | `excluded_paths` | Relative-path prefixes never indexed (`vendor`, `node_modules`, `storage`, ...) |
 | `php.root` / `php.namespace` | Scan root and namespace prefix for `PhpClassIndexer` |

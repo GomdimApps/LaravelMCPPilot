@@ -4,7 +4,7 @@ return [
 
     'search' => [
 
-        'cache_path' => base_path('bootstrap/cache/laravel-mcp-pilot.json'),
+        'database_path' => base_path('bootstrap/cache/laravel-mcp-pilot.db'),
 
         'max_results' => 30,
 

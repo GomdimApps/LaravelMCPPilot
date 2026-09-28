@@ -23,7 +23,7 @@ abstract class TestCase extends Orchestra
         // fixture file (Str::after()'s no-op case) — assertions below match on that accordingly.
         $fixtures = __DIR__.'/Fixtures';
 
-        $app['config']->set('laravel-mcp-pilot.search.cache_path', sys_get_temp_dir().'/laravel-mcp-pilot-test-index.json');
+        $app['config']->set('laravel-mcp-pilot.search.database_path', ':memory:');
         $app['config']->set('laravel-mcp-pilot.search.php.root', $fixtures.'/app');
         $app['config']->set('laravel-mcp-pilot.search.php.namespace', 'App');
         $app['config']->set('laravel-mcp-pilot.search.controllers_namespace', 'App\\Http\\Controllers\\');
@@ -46,12 +46,5 @@ abstract class TestCase extends Orchestra
             'database' => ':memory:',
             'prefix' => '',
         ]);
-    }
-
-    protected function tearDown(): void
-    {
-        @unlink(sys_get_temp_dir().'/laravel-mcp-pilot-test-index.json');
-
-        parent::tearDown();
     }
 }
