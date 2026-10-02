@@ -10,7 +10,7 @@
 ## Quick Start
 
 ```bash
-composer require gomdimapps/laravel-mcp-pilot
+composer require --dev gomdimapps/laravel-mcp-pilot
 php artisan vendor:publish --tag=laravel-mcp-pilot-config
 ```
 

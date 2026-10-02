@@ -2,12 +2,13 @@
 
 namespace GomdimApps\LaravelMCPPilot\Database;
 
+use Illuminate\Contracts\Support\DeferrableProvider;
 use Illuminate\Support\ServiceProvider;
 use GomdimApps\LaravelMCPPilot\Database\Support\KeywordSearch;
 use GomdimApps\LaravelMCPPilot\Database\Support\SpatiePermissionIntrospector;
 use GomdimApps\LaravelMCPPilot\Database\Support\SqlStatementGuard;
 
-class DatabaseServiceProvider extends ServiceProvider
+class DatabaseServiceProvider extends ServiceProvider implements DeferrableProvider
 {
     public function register(): void
     {
@@ -27,5 +28,16 @@ class DatabaseServiceProvider extends ServiceProvider
             $app->make(SpatiePermissionIntrospector::class),
             (bool) config('laravel-mcp-pilot.database.allow_write_queries'),
         ));
+    }
+
+    /** @return array<int, string> */
+    public function provides(): array
+    {
+        return [
+            SqlStatementGuard::class,
+            KeywordSearch::class,
+            SpatiePermissionIntrospector::class,
+            DatabaseIntrospectionService::class,
+        ];
     }
 }

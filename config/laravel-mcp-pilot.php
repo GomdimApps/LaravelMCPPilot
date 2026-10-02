@@ -2,6 +2,18 @@
 
 return [
 
+    /*
+     * Hard off switch for the whole package (search index + database introspection). This is
+     * a dev-only tool meant to be driven by an AI agent over MCP during local development — it
+     * should never run as part of a real request. Installing the package with
+     * `composer require --dev` (see docs/installation.md) already keeps it out of a production
+     * vendor/ entirely; this flag is defense-in-depth for setups where dev/prod don't cleanly
+     * separate (shared vendor/, a reused Docker image, `composer install` without --no-dev in
+     * some environment). Set LARAVEL_MCP_PILOT_ENABLED=false wherever this package's code must
+     * never run, even if it's present.
+     */
+    'enabled' => env('LARAVEL_MCP_PILOT_ENABLED', true),
+
     'search' => [
 
         'database_path' => base_path('bootstrap/cache/laravel-mcp-pilot.db'),

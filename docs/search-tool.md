@@ -40,6 +40,13 @@ A consuming app adds its own indexer without touching the package — just imple
 $this->app->tag(LivewireComponentIndexer::class, 'laravel-mcp-pilot.indexers');
 ```
 
+> **Note:** `SearchServiceProvider` is a `DeferrableProvider` — its bindings/tags only exist
+> once something resolves `SearchService` or another of its bound classes for the first time.
+> Reading `app()->tagged('laravel-mcp-pilot.indexers')` directly, without ever resolving
+> `SearchService::class` first, will see this package's own five built-in indexers as absent.
+> Always go through `app(SearchService::class)` (as shown above) rather than reading the tag
+> directly.
+
 `SearchService::build()` never needs to know the new indexer exists — it just iterates `$this->indexers` and calls `entries()`.
 
 ## Config

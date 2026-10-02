@@ -12,10 +12,19 @@ class LaravelMCPPilotServiceProvider extends ServiceProvider
     {
         $this->mergeConfig();
 
-        // Each tool ships its own ServiceProvider — adding a new tool means writing one more
-        // provider class and registering it here, without touching this file otherwise.
-        $this->app->register(SearchServiceProvider::class);
-        $this->app->register(DatabaseServiceProvider::class);
+        if (! config('laravel-mcp-pilot.enabled')) {
+            return;
+        }
+
+        $this->app->addDeferredServices(array_fill_keys(
+            (new SearchServiceProvider($this->app))->provides(),
+            SearchServiceProvider::class,
+        ));
+
+        $this->app->addDeferredServices(array_fill_keys(
+            (new DatabaseServiceProvider($this->app))->provides(),
+            DatabaseServiceProvider::class,
+        ));
     }
 
     /**

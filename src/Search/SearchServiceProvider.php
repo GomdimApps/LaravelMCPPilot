@@ -2,6 +2,7 @@
 
 namespace GomdimApps\LaravelMCPPilot\Search;
 
+use Illuminate\Contracts\Support\DeferrableProvider;
 use Illuminate\Support\ServiceProvider;
 use GomdimApps\LaravelMCPPilot\Search\Indexers\CoreFileIndexer;
 use GomdimApps\LaravelMCPPilot\Search\Indexers\FrontendIndexer;
@@ -35,7 +36,7 @@ use GomdimApps\LaravelMCPPilot\Search\Support\ReflectionSignature;
 use GomdimApps\LaravelMCPPilot\Search\Support\Tokenizer;
 use GomdimApps\LaravelMCPPilot\Search\Support\UseImportResolver;
 
-class SearchServiceProvider extends ServiceProvider
+class SearchServiceProvider extends ServiceProvider implements DeferrableProvider
 {
     public function register(): void
     {
@@ -122,5 +123,36 @@ class SearchServiceProvider extends ServiceProvider
             $app->make(Tokenizer::class),
             $app->make(SearchIndexRepository::class),
         ));
+    }
+
+    /**
+     * Every singleton() bound above, in declaration order. Resolving any one of these is what
+     * triggers register() to actually run — classes that are only ever tagged here (the Kind
+     * detectors with no config dependency, every *Schema class) aren't listed: they resolve via
+     * tagged()->make() from inside register() itself, once it's already running.
+     *
+     * @return array<int, string>
+     */
+    public function provides(): array
+    {
+        return [
+            SearchIndexRepository::class,
+            FileScanner::class,
+            ReflectionSignature::class,
+            UseImportResolver::class,
+            ControllerKind::class,
+            MiddlewareKind::class,
+            PolicyKind::class,
+            ListenerKind::class,
+            EventKind::class,
+            ServiceKind::class,
+            PhpKindResolver::class,
+            PhpClassIndexer::class,
+            FrontendIndexer::class,
+            RouteIndexer::class,
+            SupportFileIndexer::class,
+            CoreFileIndexer::class,
+            SearchService::class,
+        ];
     }
 }
